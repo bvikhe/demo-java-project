@@ -1,0 +1,18 @@
+{
+  "name": "demo-backend",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Fastify API with Postgres persistence",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "test": "node test/test.js"
+  },
+  "dependencies": {
+    "fastify": "^4.28.1",
+    "pg": "^8.12.0"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
