@@ -19,9 +19,70 @@ CRUD UI :- `frontend/src/App.jsx` | `http://localhost:8080`
 Postgres service :- `docker-compose.yaml` (DB image import)
 Backend DB access :- `backend/db/index.js`
 Container images :- `backend/Dockerfile` + `frontend/Dockerfile`
-Local orchestration :- `docker-compose.yaml`|docker-compose up --build
+Local orchestration :- `docker-compose.yaml`|`docker-compose up --build` for Docker, `start-podman.sh`/`stop-podman.sh` on the `podman-compose` branch for Podman
 CI pipeline :- `.github/workflows/ci.yml`
 Environment config :- `.env.example`
+
+### ----> Installation
+
+**Docker / Docker Compose**
+```bash
+(https://docs.docker.com/engine/install/)
+docker-compose --version
+```
+
+Podman / podman-compose
+```bash
+# Install Podman (e.g. apt/dnf from your distro, or https://podman.io/docs/installation)
+podman --version
+
+# Install podman-compose
+pip3 install --user podman-compose
+podman-compose --version
+```
+
+### ----> Running with Docker Compose
+```bash
+docker-compose up --build
+# open http://localhost:8080
+```
+
+### ----> Running with Podman
+For a rootless Podman/WSL setup, switch to the `podman-compose` branch and run:
+
+```bash
+# Build and start all services
+BUILDAH_ISOLATION=chroot podman-compose up --build -d
+
+# Stop the stack (the 'pgdata' Podman volume is NOT removed, so DB data persists)
+podman-compose down
+```
+
+Frontend: http://localhost:8080  
+Backend: http://localhost:3000/api/hello  
+Database check: http://localhost:3000/api/db
+
+### ----> Known production gaps and next steps
+
+No health/readiness checks:- The backend has no readiness probe and no retry on DB startup. Add `/health` and `/ready` endpoints and Podman/K8s health checks.
+
+Secrets in plain env vars:- `DATABASE_URL` and Postgres credentials are exposed as environment variables. Move to Podman secrets, a secret manager, or Kubernetes `Secret` objects.
+
+No resource limits:- No CPU/memory limits or requests. Add `podman run --memory/--cpus` equivalents and K8s `resources` blocks.
+
+No observability pipeline:- No structured logs, metrics, or distributed tracing. Add a `/metrics` endpoint (e.g. Prometheus) and ship logs to a centralized system.
+
+No TLS or ingress:- Traffic is plain HTTP. Add TLS termination and an ingress/API gateway before any non-local use.
+
+No data protection:- Postgres has a named volume but no automated backup, recovery, or snapshots.
+
+Single points of failure:- One replica each for frontend, backend, and DB. Introduce multiple replicas, load balancing, and DB replication/HA for production.
+
+No graceful shutdown:- The Fastify app does not handle `SIGTERM` for in-flight requests. Add shutdown hooks and connection draining.
+
+Image supply chain:- Images come from public Docker Hub without digest pinning or vulnerability scanning. Move to a private registry with signed, scanned, and pinned images.
+
+Local-only network mode:- `network_mode: host` and `BUILDAH_ISOLATION=chroot` are rootless WSL workarounds for this exercise, not a production network model.
 
 ### ----> Stack and pragmatic choices
 
