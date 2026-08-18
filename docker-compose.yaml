@@ -1,7 +1,11 @@
-version: '3.8'
+x-podman:
+  docker_compose_compat: true
+
 services:
   db:
     image: postgres:15-alpine
+    container_name: demo-db
+    hostname: db
     environment:
       POSTGRES_USER: demo
       POSTGRES_PASSWORD: demo
@@ -10,7 +14,9 @@ services:
       - pgdata:/var/lib/postgresql/data
 
   backend:
-    build: ./backend
+    build:
+      context: ./backend
+    container_name: demo-backend
     ports:
       - "3000:3000"
     environment:
@@ -21,7 +27,9 @@ services:
     restart: unless-stopped
 
   frontend:
-    build: ./frontend
+    build:
+      context: ./frontend
+    container_name: demo-frontend
     ports:
       - "8080:80"
     depends_on:
