@@ -1,11 +1,8 @@
-x-podman:
-  docker_compose_compat: true
-
 services:
   db:
-    image: postgres:15-alpine
+    image: docker.io/library/postgres:15-alpine
     container_name: demo-db
-    hostname: db
+    network_mode: host
     environment:
       POSTGRES_USER: demo
       POSTGRES_PASSWORD: demo
@@ -17,21 +14,20 @@ services:
     build:
       context: ./backend
     container_name: demo-backend
-    ports:
-      - "3000:3000"
+    network_mode: host
     environment:
       - NODE_ENV=production
-      - DATABASE_URL=postgres://demo:demo@db:5432/demo
+      - DATABASE_URL=postgres://demo:demo@localhost:5432/demo
+      - PORT=3000
     depends_on:
       - db
-    restart: unless-stopped
+    restart: on-failure
 
   frontend:
     build:
       context: ./frontend
     container_name: demo-frontend
-    ports:
-      - "8080:80"
+    network_mode: host
     depends_on:
       - backend
 
